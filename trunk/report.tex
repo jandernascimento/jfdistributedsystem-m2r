@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[a4paper]{article}
 
 \usepackage{listings}
 \usepackage{color}
@@ -14,14 +14,43 @@
 
 \maketitle
 
-\tableofcontents
+%\tableofcontents For 2 pages document, I don't find it useful 
 
 %Begin Liviu section
 
-\section{Introduction}          
-\section{PSI Isolation}
-\subsection{Counter Sets}
+\section{Introduction}
+This paper will give a short review of a system called Walter which is a key-value store that supports transactions and replicates data across distant sites and the key features which are behind it, such as Parallel Snapshot Isolation (PSI), preferred sites and counting sets. PSI provides a strong guarantee within a site; across sites, PSI provides casual ordering and precludes write-write conflicts.
 
+The need of such a system is because web applications are increasingly deployed over many data centers or sites around the world to provide better locality, availability and distance tolerance which involves geo-replication. The benefit of transaction is to group writes in an atomic unit so that failures do not leave behind partial writes and concurrent access by other services are not intermingled(isolation). Without them there is a significant burden which have to be dealt by developers of end applications. The key features of Walter are:
+\begin{itemize}
+\item \textit{Asynchronous replication across sites.} Replication is done lazily in the background to reduce latency
+\item \textit{Efficient update-anywhere for certain objects.} Counting sets can be updated efficiently anywhere, while other objects can be updated efficiently at their preferred site
+\item \textit{Freedom from conflict-resolution logic}
+\item \textit{Strong isolation within each site.} Provided by PSI.
+\end{itemize}
+          
+\section{Parallel Snapshot Isolation}
+Snapshot isolation ensures that (a) transactions read from a snapshot that reflects a single commit ordering of transactions, and (b) if two concurrent transactions have a write-write conflict, one must be aborted.
+ 
+\textit{Parallel snapshot isolation} extends snapshot isolation by allowing different sites to have different commit orderings. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
+
+To avoid write-write conflicts across sites and for implementation of PSI, Walter uses two techniques:
+\begin{itemize}
+\item \textit{Preferred sites.} Each object is assigned a preferred site which is the site where writes to the object can be committed without checking other sites for write conflicts.
+\item \textit{Conflict-free counting set objects.} A cset is similar to a multiset in that it keeps a count for each element, but unlike multisets, the count could be negative. A cset support an operation $add(x)$ to add element $x$, which increments the counter of $x$ in the cset; and an operation $rem(x)$ to remove $x$, which decrements the counter of $x$. Because increment and decrement commute, $add$ and $rem$ also commute, and so operations never conflict. 
+\end{itemize}
+
+PSI property specification:\\
+
+PSI \textsc{property} 1. \textit{(Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began.}\\
+
+PSI \textsc{property} 2. \textit{(No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoin.}\\
+
+PSI \textsc{property} 3. \textit{(Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site.}\\
+
+It is said that the transactions are \textit{somewhere-concurrent} if they are concurrent at $site(T_{1})$ or at $site(T_{2})$.
+\\
+The anomalies which might appear because of the isolation properties of PSI are \textbf{short fork} and \textbf{long fork}. The others, such as dirty read, non-repeatable read, lost update or conflicting fork are not allowed. 
 %end Liviu section
 
 %start Jander section
