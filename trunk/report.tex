@@ -56,6 +56,19 @@ The anomalies which might appear because of the isolation properties of PSI are 
 %start Jander section
 
 \section{Design and Algorithm}
+
+The fundamental setup of Walt implies the use of a \it{Configuration Service}, which is responsible for leasing the role of preferred site to a Walt server. 
+
+Configuration Service is used to ensure fault tolerance in case of failed sites. This is done by keeping a list of actives sites, making possible to the Configuration Service lease a new preferred site, chosen by any deterministic characteristics that are irrelevant to this paper. 
+
+So Walt can perform such operation there are some intrinsic tasks that must be executed to ensure the integrity of the PSI properties.
+
+Before the configuration service switch to the new configuration (lease of a new preferred site) the faulty site must be excluded from the lost of available sites, and all transaction that are able to be recovered (that obeys the causality order) must to be identified.
+
+Since the sites synchronization are done asynchronously, some site may already received some data from the faulty site, in this case, the Configuration Service asks for those site to ignore those instruction that were partially received (commit transaction not complete) and wait for an update patch, which will be sent by the Configuration Service itself.
+
+During this process the site that depends on the preferred site are able to commit in other sites, except for write operation, since write is a very sensitive operation and required a reliable link server (preferred site).
+
 \section{Evaluation}
 
 %end Jander section
