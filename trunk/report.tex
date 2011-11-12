@@ -25,7 +25,7 @@ The need of such a system is because web applications are increasingly deployed 
 \begin{itemize}
 \item \textit{Asynchronous replication across sites.} Replication is done lazily in the background to reduce latency
 \item \textit{Efficient update-anywhere for certain objects.} Counting sets can be updated efficiently anywhere, while other objects can be updated efficiently at their preferred site
-\item \textit{Freedom from conflict-resolution logic}
+\item \textit{Freedom from conflict-resolution logic}. which is complex to developers
 \item \textit{Strong isolation within each site.} Provided by PSI.
 \end{itemize}
           
@@ -40,14 +40,15 @@ To avoid write-write conflicts across sites and for implementation of PSI, Walte
 \item \textit{Conflict-free counting set objects.} A cset is similar to a multiset in that it keeps a count for each element, but unlike multisets, the count could be negative. A cset support an operation $add(x)$ to add element $x$, which increments the counter of $x$ in the cset; and an operation $rem(x)$ to remove $x$, which decrements the counter of $x$. Because increment and decrement commute, $add$ and $rem$ also commute, and so operations never conflict. 
 \end{itemize}
 
-PSI property specification:\\
+PSI property specification:
 
 PSI \textsc{property} 1. \textit{(Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began.}\\
 
-PSI \textsc{property} 2. \textit{(No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoin.}\\
+PSI \textsc{property} 2. \textit{(No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint.}\\
 
 PSI \textsc{property} 3. \textit{(Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site.}\\
 
+%may be add some other info
 It is said that the transactions are \textit{somewhere-concurrent} if they are concurrent at $site(T_{1})$ or at $site(T_{2})$.
 \\
 The anomalies which might appear because of the isolation properties of PSI are \textbf{short fork} and \textbf{long fork}. The others, such as dirty read, non-repeatable read, lost update or conflicting fork are not allowed. 
@@ -57,19 +58,30 @@ The anomalies which might appear because of the isolation properties of PSI are 
 
 \section{Design and Algorithm}
 
-The fundamental setup of Walt implies the use of a \it{Configuration Service}, which is responsible for leasing the role of preferred site to a Walt server. 
+The fundamental setup of Walter implies the use of a \textit{Configuration Service}, which is responsible for leasing the role of preferred site to a Walter server. 
 
-Configuration Service is used to ensure fault tolerance in case of failed sites. This is done by keeping a list of actives sites, making possible to the Configuration Service lease a new preferred site, chosen by any deterministic characteristics that are irrelevant to this paper. 
+Configuration Service is used to ensure fault tolerance in case of failed sites. This is done by keeping a list of active sites, making possible to the Configuration Service lease a new preferred site when needed, chosen by any deterministic characteristics, for instance the lowest latency between the client and server. 
 
-So Walt can perform such operation there are some intrinsic tasks that must be executed to ensure the integrity of the PSI properties.
+So Walter can perform such operation; there are some intrinsic tasks that must be executed to ensure the integrity of the PSI properties.
 
-Before the configuration service switch to the new configuration (lease of a new preferred site) the faulty site must be excluded from the lost of available sites, and all transaction that are able to be recovered (that obeys the causality order) must to be identified.
+Before the Configuration Service switch to the new configuration (lease of a new preferred site) the faulty site must be excluded from the list of available sites, and all correct transaction that are able to be recovered must to be identified.
 
-Since the sites synchronization are done asynchronously, some site may already received some data from the faulty site, in this case, the Configuration Service asks for those site to ignore those instruction that were partially received (commit transaction not complete) and wait for an update patch, which will be sent by the Configuration Service itself.
+It is said to be correct transaction those which obeys the causality order and atomicity. This is done by using Vector Clock. 
+
+Since the sites synchronization are done asynchronously, some sites may already received some data from the faulty site, in this case, the Configuration Service asks for those site to ignore those instruction that were partially received (commit transaction not complete) and wait for an update patch, which will be sent by the Configuration Service itself.
 
 During this process the site that depends on the preferred site are able to commit in other sites, except for write operation, since write is a very sensitive operation and required a reliable link server (preferred site).
 
+There exist two modalities of transactions: the fast and slow commit. They are chosen depending weather the object is entirely located at preferred site  or not.
+
+
 \section{Evaluation}
+
+The evaluation was done by testing two application WaltSocial (facebook-like application) and ReTwis (twitter-like application).
+
+WaltSocial and ReTwis were tested in Amazon's EC2 cloud computing, with a good response.
+
+
 
 %end Jander section
 
