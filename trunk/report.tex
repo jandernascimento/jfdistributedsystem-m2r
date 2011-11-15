@@ -32,14 +32,11 @@ The need of such a system is because web applications are increasingly deployed 
 \end{itemize}
           
 \section{Parallel Snapshot Isolation}
-
-Snapshot Isolation precludes that read operation sees the most recent committed transaction.
-
-PSI extends SI by ensures that transactions read from a snapshot reflects a single commit ordering of transactions, and if two concurrent transactions have a write-write conflict, one must be aborted.
+Snapshot isolation ensures that (a) transactions read from a snapshot that reflects a single commit ordering of transactions, and (b) if two concurrent transactions have a write-write conflict, one must be aborted.
  
 \textit{Parallel snapshot isolation} extends snapshot isolation by allowing different sites to have different commit orderings. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
 
-With purpose of avoiding write-write conflicts across sites Walter uses two techniques:
+To avoid write-write conflicts across sites and for implementation of PSI, Walter uses two techniques:
 \begin{itemize}
 \item \textit{Preferred sites.} Each object is assigned a preferred site which is the site where writes to the object can be committed without checking other sites for write conflicts.
 \item \textit{Conflict-free counting set objects.} A cset is similar to a multiset in that it keeps a count for each element, but unlike multisets, the count could be negative. A cset support an operation $add(x)$ to add element $x$, which increments the counter of $x$ in the cset; and an operation $rem(x)$ to remove $x$, which decrements the counter of $x$. Because increment and decrement commute, $add$ and $rem$ also commute, and so operations never conflict. 
@@ -63,54 +60,28 @@ The anomalies which might appear because of the isolation properties of PSI are 
 
 \section{Design and Algorithm}
 
-The fundamental setup of Walter implies the use of a \textit{Configuration Service}, which is responsible for leasing the role of preferred site to a Walter server. 
+Each site has a local Walter server and several clients. Communication is done with Remote Procedure Calls. A \textit{Configuration Service} is responsible for leasing the role of preferred site to a container as well as currently active sites. 
 
-Configuration Service is used to ensure fault tolerance in case of failed sites. This is done by keeping a list of active sites, making possible to the Configuration Service lease a new preferred site when needed, chosen by any deterministic characteristics, for instance the lowest latency between the client and server. 
+For keeping track the sequence of operations, Walter uses vector timestamps to synchronize between sites. Each site has a local version number indicating the number of transactions reflected in the snapshot.
 
-So Walter can perform such operation; there are some intrinsic tasks that must be executed to ensure the integrity of the PSI properties.
+There exist two types of transactions: the fast and slow commit. The fast commit is used for objects who are local to the preferred site and involves two checks: first, checking if the objects are unmodified since the transaction started and second if all the objects are unlocked. The slow commit is used for transactions whose object's preferred site is not local and it is done in two phases: first, the server asks the objects preferred sites if they are unmodified and unlocked and if all of them are "yes" then it proceeds to commit as a fast commit protocol.
 
-Before the Configuration Service switch to the new configuration (lease of a new preferred site) the faulty site must be excluded from the list of available sites, and all correct transaction that are able to be recovered must to be identified.
-
-It is said to be correct transaction those which obeys the causality order and atomicity. This is done by using Vector Clock. 
-
-Since the sites synchronization are done asynchronously, some sites may already received some data from the faulty site, in this case, the Configuration Service asks for those site to ignore those instruction that were partially received (commit transaction not complete) and wait for an update patch, which will be sent by the Configuration Service itself.
-
-During this process the site that depends on the preferred site are able to commit in other sites, except for write operation, since write is a very sensitive operation and required a reliable link server (preferred site).
-
-There exist two modalities of transactions: the fast and slow commit. They are chosen depending weather the object is entirely located at preferred site  or not.
-
+Propagation of committed transactions is done asynchronously to the other sites. When all the transactions are committed at all sites it is marked as globally visible. 
 
 \section{Evaluation}
 
-The evaluation was done by testing two application WaltSocial (facebook-like application) and ReTwis (twitter-like application).
+They first evaluated the base performance of Walter comparing it with Berkely DB 11gR2. The resulted transaction throughputs of read and write were comparable.
 
-WaltSocial and ReTwis were tested in Amazon's EC2 cloud computing, with a good response.
+The benchmark consisted in either write or read transactions each accessing one 100 byte object. Experiments were run on Amazon's EC2 cloud platform in four sites across the globe. 
 
-The table \ref{tab-evaluation} show the performance with fast commits. 
+The micro-benchmark for evaluating the throughput of transactions across several sites with read/write operations as well as performing several operations within one transactions showed a linear scalability with the number of sites. Read throughput is bounded by the RPC performance and write throughput is lower compared to the read one because of the lock contention. Having several operations within one transactions increases the throughput compared with every operation being a single transaction. 
 
-\begin{table}[center]
-\begin{tabular}{ l c r }
-	\hline
-   Name & Read & Write \\
-   \hline
-   Walter & 72 Ktps & 33.5 Ktps \\
-   Berkley & 80 Ktps & 32 Ktps \\
- \end{tabular}
- \caption{\label{tab-evaluation} Evaluation}
- \end{table}
+As far as the latency concerns, when having fast commits this was mainly influenced by the effects of queuing inside the Walter server and of flushing the commit log to disk resulting a 99.9 percentile latency of 27 ms. When it comes to disaster safe transactions the latency is approximately uniform distributed between $[RTT_{MAX},2*RTT_{MAX}]$ where $RTT_{MAX}$ is the maximum round trip latency between the site which issued the transactions and other sites.
 
 %end Jander section
 
-\section{Agreement \& Doubts}
-
-\begin{itemize}
-\item Only experiments until 4 sites were tested, that doesn´t means it really scale.
-\item The fault tolerance, server side, solution relies on a Configuration Service, which looks to be centralized;
-\item No absolute comparison with another High available systems (e.g. facebook, orkut)
-\end{itemize}
-
 \section{Conclusion}
 
-
+The authors have designed a transactional geo-replicated key-value store with the key feature of Parallel Snapshot Isolation which in case of asynchronous replication, avoids conflicts across sites allowing efficient implementation of application, demonstrated by WaltSocial and ReTwis which achieved reasonable performance.  
 
 \end{document}
