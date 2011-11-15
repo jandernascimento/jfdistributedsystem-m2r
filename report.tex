@@ -42,15 +42,15 @@ To avoid write-write conflicts across sites and for implementation of PSI, Walte
 
 PSI property specification:
 
-PSI \textsc{property} 1. \textit{(Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began.}\\
+PSI \textsc{property} 1. \textit{(Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began.}
 
-PSI \textsc{property} 2. \textit{(No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint.}\\
+PSI \textsc{property} 2. \textit{(No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint.}
 
-PSI \textsc{property} 3. \textit{(Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site.}\\
+PSI \textsc{property} 3. \textit{(Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site.}
 
 %may be add some other info
 It is said that the transactions are \textit{somewhere-concurrent} if they are concurrent at $site(T_{1})$ or at $site(T_{2})$.
-\\
+
 The anomalies which might appear because of the isolation properties of PSI are \textbf{short fork} and \textbf{long fork}. The others, such as dirty read, non-repeatable read, lost update or conflicting fork are not allowed. 
 %end Liviu section
 
@@ -81,7 +81,18 @@ The evaluation was done by testing two application WaltSocial (facebook-like app
 
 WaltSocial and ReTwis were tested in Amazon's EC2 cloud computing, with a good response.
 
+The table \ref{tab-evaluation} show the performance with fast commits.
 
+\begin{table}[center]
+\begin{tabular}{ l c r }
+	\hline
+   Name & Read & Write \\
+   \hline
+   Walter & 72 Ktps & 33.5 Ktps \\
+   Berkley & 80 Ktps & 32 Ktps \\
+ \end{tabular}
+ \caption{\label{tab-evaluation} Evaluation}
+ \end{table}
 
 %end Jander section
 
