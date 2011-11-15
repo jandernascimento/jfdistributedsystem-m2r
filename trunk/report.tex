@@ -3,11 +3,13 @@
 \usepackage{listings}
 \usepackage{color}
 
+\usepackage[top=2.0cm, bottom=2.0cm, left=2.0cm, right=2.0cm]{geometry}
+
 \lstset{numbersep=5pt,numbers=left,numberstyle=\footnotesize,title=\lstname,basicstyle=\footnotesize,showspaces=false,breaklines=true}
 
 \begin{document}
 
-\title{Transactional storage for geo-replicated systems overview}
+\title{Transactional storage for geo-replicated systems \\ overview}
 
 \author{Jander Nascimento,
 \and Liviu Varga}
@@ -30,11 +32,14 @@ The need of such a system is because web applications are increasingly deployed 
 \end{itemize}
           
 \section{Parallel Snapshot Isolation}
-Snapshot isolation ensures that (a) transactions read from a snapshot that reflects a single commit ordering of transactions, and (b) if two concurrent transactions have a write-write conflict, one must be aborted.
+
+Snapshot Isolation precludes that read operation sees the most recent committed transaction.
+
+PSI extends SI by ensures that transactions read from a snapshot reflects a single commit ordering of transactions, and if two concurrent transactions have a write-write conflict, one must be aborted.
  
 \textit{Parallel snapshot isolation} extends snapshot isolation by allowing different sites to have different commit orderings. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
 
-To avoid write-write conflicts across sites and for implementation of PSI, Walter uses two techniques:
+With purpose of avoiding write-write conflicts across sites Walter uses two techniques:
 \begin{itemize}
 \item \textit{Preferred sites.} Each object is assigned a preferred site which is the site where writes to the object can be committed without checking other sites for write conflicts.
 \item \textit{Conflict-free counting set objects.} A cset is similar to a multiset in that it keeps a count for each element, but unlike multisets, the count could be negative. A cset support an operation $add(x)$ to add element $x$, which increments the counter of $x$ in the cset; and an operation $rem(x)$ to remove $x$, which decrements the counter of $x$. Because increment and decrement commute, $add$ and $rem$ also commute, and so operations never conflict. 
@@ -81,7 +86,7 @@ The evaluation was done by testing two application WaltSocial (facebook-like app
 
 WaltSocial and ReTwis were tested in Amazon's EC2 cloud computing, with a good response.
 
-The table \ref{tab-evaluation} show the performance with fast commits.
+The table \ref{tab-evaluation} show the performance with fast commits. 
 
 \begin{table}[center]
 \begin{tabular}{ l c r }
@@ -103,5 +108,9 @@ The table \ref{tab-evaluation} show the performance with fast commits.
 \item The fault tolerance, server side, solution relies on a Configuration Service, which looks to be centralized;
 \item No absolute comparison with another High available systems (e.g. facebook, orkut)
 \end{itemize}
+
+\section{Conclusion}
+
+
 
 \end{document}
