@@ -5,7 +5,7 @@
 \usecolortheme{lily}
 \setbeamertemplate{footline}[page number]
 \title[Transactional storage for geo-replicated systems ]{Transactional storage for geo-replicated systems - overview}
-\author{Jander Nascimento,
+\author{Jander Nascimento
 \and Liviu Varga}
 \institute{Université Joseph Fourier}
 \date{\today}
@@ -32,7 +32,11 @@
 		\begin{frame}{State of the art}
 		
 			%talk about sinfonia compare with other the type server that dont use transactions
-		
+		\begin{itemize}
+		\item Walter: key-value store database, supporting transactions and replication of data across remote sites
+		\item There exists several systems (Sinfonia, Percolator) which offer support for transactions but they target applications on a single site. 
+		\item Whereas the systems which target distributed application don't offer support for conflict-resolution logic
+		\end{itemize}
 		\end{frame}	
 	
 		\begin{frame}{Adopted concept}
@@ -56,7 +60,7 @@
 
 \section{Walter framework}
 
-	\subsection{Transaction}
+	\subsection{Parallel Snapshot Isolation}
 		\begin{frame}{Tools}
 		
 			%talk about cset and preferered sites
@@ -70,21 +74,46 @@
 		
 		\begin{frame}{Properties}
 		
-		%put properties that must to be obey		
+		%put properties that must to be obey	
+		\begin{itemize}
 		
-		\end{frame}		
+		\item (Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began
+		\item (No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint
+		\item (Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site
 		
-		\begin{frame}{PSI}
+		\end{itemize}
+		
+		\end{frame}	
 
-			%\begin{block}{One block}
-			%	block content
-			%\end{block}
+		\begin{frame}{Anomalies}
+		
+		% to be added Fig. 8 (table and short fork, long fork pictures and a little bit of text).
 		
 		\end{frame}
 		
 		\begin{frame}{PSI and Conflict resolution}
 		
+		For avoiding write-write conflicts, two techniques are used:
 		
+		\begin{itemize}
+		
+		\item Preferred sites: Each object is assigned a preferred site where writes to it can be committed without checking other sites for conflicts
+		\item Conflict-free counting set objects: csets only allow incrementation or decremental of elements, operation which are commutative  
+		
+		\end{itemize}
+		
+		\end{frame}
+		
+		\begin{frame}{Types of transaction}
+		
+		\begin{itemize}
+		
+		\item Fast commit: used for objects which are local to the preferred site, involving two checks (objects are unmodified since the transaction started and unlocked)
+		
+		\item Slow commit: the preferred site of the object if a non-local one. This involves 2-phases: all the objects are unmodified and unlocked on their site, and after this it goes as a fast commit protocol		
+		
+		\end{itemize}
+
 		\end{frame}
  	
 	\subsection{Site Synchronization}
@@ -93,8 +122,14 @@
 	 	
 		\begin{frame}{Introduction}
 				
-				%introduction
-
+		\begin{itemize}
+		
+		\item Synchronizing among the sites Walter uses vector timestamps
+		\item Each site has a local version number indicating the number of transactions in the snapshot
+		\item This allows a casual ordering of the events
+		
+		\end{itemize}
+		
 		\end{frame}	 	
  	
 	\subsection{Fault tolerance}	
@@ -109,7 +144,19 @@
  	
 \section{Performance}
 
-	\subsection{Retwees and WaltSocial}	
+	\subsection{Features}
+	
+	\begin{frame}{Features}
+	
+		\begin{itemize}
+		\item \textit{Asynchronous replication across sites.} Replication is done lazily in the background to reduce latency
+		\item \textit{Efficient update-anywhere for certain objects.} Counting sets can be updated efficiently anywhere, while other objects can be updated efficiently at their preferred site
+		\item \textit{Freedom from conflict-resolution logic}. which is complex to developers
+		\item \textit{Strong isolation within each site.} Provided by PSI.
+		\end{itemize}
+	\end{frame}
+
+	\subsection{Results}	
 
 
 \end{document}
