@@ -71,7 +71,9 @@ Each site has a Walter server and several clients. For a given object is respons
 
 The whole communication between sites are done with Remote Procedure Calls. %we should adding something else in here.. but what!? not sure yet.
 
-To provide a site fault tolerance, Walter relies on a \textit{Configuration Service}. Which is responsible for leasing the role of preferred site to a container as well as currently active sites. 
+For a matter of organization, the objects can be organized in what is called Containers, which a single site may have several. For instance, the administrator can create one Container per user, so he can move the container across other sites to improve locality. Although, it is not possible to move the object from a given container to another one, since the \textit{oid} of each object is composed with the container id, this move would require updating the \textit{oid}'s. 
+
+To provide a site fault tolerance, Walter relies on a \textit{Configuration Service}. Which is responsible for leasing the role of preferred site to containers of the faulty site. In order to perform such operation the Configuration Service keeps a list of sites which are up and running. 
 
 For keeping track the sequence of operations, Walter uses vector timestamps to synchronize between sites, since the monolic-time concept is expensive and causes unnecessary dependencies(not causal ordering). Each site has a local version number indicating the number of transactions reflected in the snapshot.
 
