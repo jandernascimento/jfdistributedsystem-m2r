@@ -29,6 +29,21 @@
 
 	\subsection{Overview}
 	
+		\begin{frame}{Object}
+		
+			Fundamental way to reach the goal
+			\begin{enumerate}
+			\item Key-store application
+			\item Asynchronous replication
+			\end{enumerate}
+			
+			\begin{block}{Lema}
+				Respecting causality order without compromise the throughput
+			\end{block}
+					
+		
+		\end{frame}	
+	
 		\begin{frame}{State of the art}
 		
 			%talk about sinfonia compare with other the type server that dont use transactions
@@ -37,23 +52,46 @@
 		\item There exists several systems (Sinfonia, Percolator) which offer support for transactions but they target applications on a single site. 
 		\item Whereas the systems which target distributed application don't offer support for conflict-resolution logic
 		\end{itemize}
+		
 		\end{frame}	
+		
+		\begin{frame}{Already existing frameworks}
+		
+			Other transaction infrastructure					
+		
+			\begin{enumerate}
+			\item Sinfonia
+			\item Percolator
+			\end{enumerate}						
+					
+			Other storage system
+			\begin{enumerate}
+			\item PNUTS
+			\item COPS
+			\item Megastore
+			\end{enumerate}		
+
+		\end{frame}
 	
-		\begin{frame}{Adopted concept}
+		\begin{frame}{Basis of the solution}
 
 			\begin{enumerate}
-			\item Snapshop isolation
+			\item Snapshot Isolation
+			\item Ignore First Site
 			\end{enumerate}
-			
-			\pause			
-			Blerg after pause
-		
-			
+
+			\begin{block}{Nothing is so easy..}
+				Snapshot Isolation protocol had to be changed to support multiple site store
+			\end{block}
+						
 		\end{frame}
 
 		\begin{frame}{Limitations}
 
-			Content of my other frame	
+			\begin{enumerate}
+			\item Short and long fork may happen
+			\item Only a single store system per site used for writing
+			\end{enumerate}
 			
 		\end{frame}
 		
@@ -65,6 +103,11 @@
 		
 			%talk about cset and preferered sites
 		
+			Snapshot Isolation providing a base protocol for information exchange
+			
+			CSet a non structure way of keeping information with low conflict rate		
+			%talk about what is exactly c set
+		
 			%\begin{quotation}
 			%some pretty in here
 			%\end{quotation} 
@@ -74,26 +117,38 @@
 		
 		\begin{frame}{Properties}
 		
-		%put properties that must to be obey	
+		The following properties must be maintained:		
 		\begin{itemize}
-		
 		\item (Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began
 		\item (No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint
 		\item (Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site
+		\end{itemize}		
 		
+		\begin{itemize}
+		\item (Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began
+		\item (No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint
+		\item (Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site
 		\end{itemize}
 		
 		\end{frame}	
 
 		\begin{frame}{Anomalies}
 		
-		% to be added Fig. 8 (table and short fork, long fork pictures and a little bit of text).
+		Some anomalies that might affect some store systems are:
+		\begin{itemize}
+		\item Dirty read
+		\item Non-repeatable read
+		\item Lost update
+		\item Short fork
+		\item Long fork
+		\item Conflict fork
+		\end{itemize}		
 		
 		\end{frame}
 		
 		\begin{frame}{PSI and Conflict resolution}
 		
-		For avoiding write-write conflicts, two techniques are used:
+		In order to improve conflict resolution, following approaches are used:
 		
 		\begin{itemize}
 		
@@ -116,7 +171,18 @@
 
 		\end{frame}
  	
-	\subsection{Site Synchronization}
+		\begin{frame}{Transaction Durability}
+		
+		Two kinds of durability can be used:
+
+		\begin{itemize}
+		\item Normal
+		\item Disaster-safe durability
+		\end{itemize}		
+		
+		\end{frame} 	
+ 	
+	\subsection{Site Replication}
 	 	
  	%talk about 	 	
 	 	
@@ -131,16 +197,17 @@
 		\end{itemize}
 		
 		\end{frame}	 	
+		
+		\begin{frame}{Site Recovery}
+		
+		In case of a full site failure, those approaches can be applied:
+		\begin{itemize}
+		\item Conservative
+		\item Agressive
+		\end{itemize}		
+		
+		\end{frame}	 	
  	
-	\subsection{Fault tolerance}	
-	 	
- 	%talk about 
- 	
-		\begin{frame}{Introduction}
-				
-				%introduction
-
-		\end{frame}	 	 	
  	
 \section{Performance}
 
@@ -157,6 +224,5 @@
 	\end{frame}
 
 	\subsection{Results}	
-
 
 \end{document}
