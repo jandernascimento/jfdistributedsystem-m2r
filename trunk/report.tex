@@ -16,14 +16,21 @@
 
 \maketitle
 
-%\tableofcontents For 2 pages document, I don't find it useful 
-
 %Begin Liviu section
 
 \section{Introduction}
-This paper will give a short review of a system called Walter which is a key-value store that supports transactions and replicates data across distant sites and the key features which are behind it, such as Parallel Snapshot Isolation (PSI), preferred sites and counting sets. PSI provides a strong guarantee within a site; across sites, PSI provides casual ordering and precludes write-write conflicts.
+This paper will give a short review of Walter, a key-value store that supports transactions and replicates data across remote sites. Those goals are reached by using preferred sites and counting sets, this protocol is named Parallel Snapshot Isolation (PSI). 
 
-The need of such a system is because web applications are increasingly deployed over many data centers or sites around the world to provide better locality, availability and distance tolerance which involves geo-replication. The benefit of transaction is to group writes in an atomic unit so that failures do not leave behind partial writes and concurrent access by other services are not intermingled(isolation). Without them there is a significant burden which have to be dealt by developers of end applications. The key features of Walter are:
+PSI was coined after Snapshop Isolation(SI), an approach already largely used by by comercial databases (e.g. Oracle). 
+
+SI provides a strong guarantee within a site; Which leaves the lack for the multiple sites store. Thus, PSI provides casual ordering and precludes write-write conflicts across sites.
+
+The need of such a system is because web applications are getting more popular and are deployed over many data centers or sites around the world to provide better locality, availability and distance tolerance which involves geo-replication. 
+
+The benefit of transaction is to group writes in an atomic unit so that failures do not leave behind partial writes and concurrent access by other services are not intermingled(isolated). Without them there is a significant burden which have to be dealt by application developers. 
+
+The key features of Walter are:
+
 \begin{itemize}
 \item \textit{Asynchronous replication across sites.} Replication is done lazily in the background to reduce latency
 \item \textit{Efficient update-anywhere for certain objects.} Counting sets can be updated efficiently anywhere, while other objects can be updated efficiently at their preferred site
@@ -32,9 +39,9 @@ The need of such a system is because web applications are increasingly deployed 
 \end{itemize}
           
 \section{Parallel Snapshot Isolation}
-Snapshot isolation ensures that (a) transactions read from a snapshot that reflects a single commit ordering of transactions, and (b) if two concurrent transactions have a write-write conflict, one must be aborted.
+Snapshot isolation ensures that, \textbf{first} transactions are read from a snapshot that reflects a single commit ordering of transactions, and \textbf{secondly} providing certain level of non-assisted conflict resolution, e.g if two concurrent transactions have a write-write conflict, one must be aborted.
  
-\textit{Parallel snapshot isolation} extends snapshot isolation by allowing different sites to have different commit orderings. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
+\textit{Parallel snapshot isolation} extends Snapshot Isolation by allowing different sites to have different commit orderings across multiple sites. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
 
 To avoid write-write conflicts across sites and for implementation of PSI, Walter uses two techniques:
 \begin{itemize}
@@ -53,20 +60,27 @@ PSI \textsc{property} 3. \textit{(Commit Causality Across Sites) If a transactio
 %may be add some other info
 It is said that the transactions are \textit{somewhere-concurrent} if they are concurrent at $site(T_{1})$ or at $site(T_{2})$.
 
-The anomalies which might appear because of the isolation properties of PSI are \textbf{short fork} and \textbf{long fork}. The others, such as dirty read, non-repeatable read, lost update or conflicting fork are not allowed. 
+The anomalies which might appear because of the isolation properties of PSI are \textbf{short fork} and \textbf{long fork}, which are the price paid for replicate the store update buffer asynchronously. Others anomalies such as dirty read, non-repeatable read, lost update or conflicting fork does not happen in this protocol. 
 %end Liviu section
 
 %start Jander section
 
 \section{Design and Algorithm}
 
-Each site has a local Walter server and several clients. Communication is done with Remote Procedure Calls. A \textit{Configuration Service} is responsible for leasing the role of preferred site to a container as well as currently active sites. 
+Each site has a Walter server and several clients. For a given object is responsibility of one, and only one, Walter server to update (perform write) that object, although others clients, located in other sites, can read it.
 
-For keeping track the sequence of operations, Walter uses vector timestamps to synchronize between sites. Each site has a local version number indicating the number of transactions reflected in the snapshot.
+The whole communication between sites are done with Remote Procedure Calls. %we should adding something else in here.. but what!? not sure yet.
 
-There exist two types of transactions: the fast and slow commit. The fast commit is used for objects who are local to the preferred site and involves two checks: first, checking if the objects are unmodified since the transaction started and second if all the objects are unlocked. The slow commit is used for transactions whose object's preferred site is not local and it is done in two phases: first, the server asks the objects preferred sites if they are unmodified and unlocked and if all of them are "yes" then it proceeds to commit as a fast commit protocol.
+To provide a site fault tolerance, Walter relies on a \textit{Configuration Service}. Which is responsible for leasing the role of preferred site to a container as well as currently active sites. 
 
-Propagation of committed transactions is done asynchronously to the other sites. When all the transactions are committed at all sites it is marked as globally visible. 
+For keeping track the sequence of operations, Walter uses vector timestamps to synchronize between sites, since the monolic-time concept is expensive and causes unnecessary dependencies(not causal ordering). Each site has a local version number indicating the number of transactions reflected in the snapshot.
+
+There exist two types of transactions: the fast and slow commit. 
+
+The \textit{fast commit} is used for objects which are local to the preferred site and involves two checks: first, checking if the objects are unmodified since the transaction started and second if all the objects are unlocked. 
+In other corner, \textit{slow commit} is used for transactions whose object's preferred site is a non-local one. In this case to update is done in two phases: first, the server asks the objects preferred sites if they are unmodified and unlocked and if all of them are "yes" then it proceeds to commit as a fast commit protocol. %review once more
+
+Propagation of committed transactions are done asynchronously to the other sites. When all the transactions are committed at all sites, the transaction is marked as globally thus becomes visible to other sites. 
 
 \section{Evaluation}
 
