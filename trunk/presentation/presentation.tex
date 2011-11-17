@@ -1,6 +1,7 @@
 \documentclass{beamer}
 \usepackage[utf8]{inputenc}
 \usepackage[final]{pdfpages}
+
 \usetheme{Goettingen}%Warsaw}
 \usecolortheme{lily}
 \setbeamertemplate{footline}[page number]
@@ -31,7 +32,12 @@
 	
 		\begin{frame}{Objective}
 		
-			Increase distributed system availability while reduce the response time 
+			Build scalable distributed system, improve the availability and reduce response time 
+		
+	\begin{figure} [H]
+		\centering
+		\includegraphics[scale=0.20]{img/fig:network}
+	\end{figure}		
 		
 			How this is achieved?
 			\begin{enumerate}
@@ -46,7 +52,26 @@
 		\end{frame}	
 			
 		\begin{frame}{Already existing frameworks}
+	
+
+
 		
+	
+	\begin{columns}
+	\begin{column}[1]{5cm}
+	\includegraphics[width=0.5\textwidth]{img/fig:google}
+	\end{column}
+	\begin{column}[1]{5cm}
+	\includegraphics[width=0.5\textwidth]{img/fig:yahoo}
+	\end{column}
+	\end{columns}
+		
+		
+		\begin{figure} [H]
+			\centering
+			\includegraphics[scale=0.20]{img/fig:hp}
+		\end{figure}				
+
 			Other transaction infrastructure					
 		
 			\begin{enumerate}
@@ -63,7 +88,7 @@
 
 		\end{frame}
 	
-		\begin{frame}{Issues?}
+		\begin{frame}{Dificulties?}
 		
 			%talk about sinfonia compare with other the type server that dont use transactions
 		\begin{itemize}
@@ -132,6 +157,9 @@
 		\end{itemize}		
 		
 		\end{frame}
+
+		%%%% JANDER SPEACH ENDS HERE
+		%%%% LIVIU STARTS HERE
 
 		\begin{frame}{PSI and Conflict resolution}
 		
