@@ -19,34 +19,36 @@
 %Begin Liviu section
 
 \section{Introduction}
-This paper will give a short review of Walter, a key-value store that supports transactions and replicates data across remote sites. This goals are reached by using preferred sites and counting sets, together with a protocol named Parallel Snapshot Isolation (PSI). 
+This paper will give a short review of Walter, a key-value store that allows asynchronous replication. It supports transactions and replicates data across remote sites. This goals are reached by using preferred sites and counting sets, together with a protocol named Parallel Snapshot Isolation (PSI). 
 
-PSI was coined after Snapshop Isolation(SI), an approach already largely used by by comercial databases (e.g. Oracle). 
+PSI was coined after Snapshot Isolation(SI), an approach already largely used by commercial databases (e.g. Oracle). 
 
 SI provides a strong guarantee within a site; Which leaves the lack for the multiple sites store. Thus, PSI provides casual ordering and precludes write-write conflicts across sites.
 
-The need of such a system is because web applications are getting more popular and are deployed over many data centers or sites around the world to provide better locality, availability and distance tolerance which involves geo-replication. 
+The need of such a system is because web applications are getting more popular and are deployed in a distributed  manner around the world (providing a better locality). Thus fault tolerance and throughput became a major concerning. 
 
-The benefit of transaction is to group writes in an atomic unit so that failures do not leave behind partial writes and concurrent access by other services are not intermingled(isolated). Without them there is a significant burden which have to be dealt by application developers. 
+But performance is not the only key for ensure the success of such application, the consistence and protection against conflicts are fundamental, that where transaction plays a important role in distributed system. 
+
+The transaction of concept is to group writes in an atomic unit so that failures do not leave behind partial writes and concurrent access by other services are not intermingled(isolated). Without them there is a significant burden which have to be dealt by application developers. 
 
 The key features of Walter are:
 
 \begin{itemize}
 \item \textit{Asynchronous replication across sites.} Replication is done lazily in the background to reduce latency
-\item \textit{Efficient update-anywhere for certain objects.} Counting sets can be updated efficiently anywhere, while other objects can be updated efficiently at their preferred site
-\item \textit{Freedom from conflict-resolution logic}. which is complex to developers
-\item \textit{Strong isolation within each site.} Provided by PSI.
+\item \textit{Efficient update-anywhere}. Counting Sets can be updated efficiently anywhere
+\item \textit{Conflict-resolution logic}. Solving part of conflict issues
+\item \textit{Strong isolation within each site}. Provided by PSI.
 \end{itemize}
           
 \section{Parallel Snapshot Isolation}
-Snapshot isolation ensures that, \textbf{first}, transactions are read from a snapshot that reflects a single commit ordering of transactions, and, \textbf{secondly}, providing certain level of non-assisted conflict resolution, e.g if two concurrent transactions have a write-write conflict, one must be aborted.
+Snapshot isolation ensures that: \textbf{First}, transactions are read from a snapshot that reflects the last commit transaction, and, \textbf{secondly}, providing certain level of non-assisted conflict resolution, e.g. if two concurrent transactions have a write-write conflict, one is aborted.
  
-\textit{Parallel snapshot isolation} extends Snapshot Isolation by allowing different sites to have different commit orderings across multiple sites. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
+\textit{Parallel Snapshot Isolation} extends Snapshot Isolation by allowing different sites to have different commit orderings across multiple sites. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
 
 To avoid write-write conflicts across sites and for implementation of PSI, Walter uses two techniques:
 \begin{itemize}
-\item \textit{Preferred sites.} Each object is assigned a preferred site which is the site where writes to the object can be committed without checking other sites for write conflicts.
-\item \textit{Conflict-free counting set objects.} A cset is similar to a multiset in that it keeps a count for each element, but unlike multisets, the count could be negative. A cset support an operation $add(x)$ to add element $x$, which increments the counter of $x$ in the cset; and an operation $rem(x)$ to remove $x$, which decrements the counter of $x$. Because increment and decrement commute, $add$ and $rem$ also commute, and so operations never conflict. 
+\item \textit{Preferred sites.} Each container is assigned to a preferred site which is the site that is allowed to write objects in that container. Meaning that the objects inside the container can be committed without checking other sites for write conflicts.
+\item \textit{Conflict-free counting set objects.} A \textit{cset} is similar to a \textit{multiset}, in the sense that it keeps a count for each element, but unlike \textit{multisets}, the count could be negative for \textit{cset}. A \textit{cset} supports few operations, which can be extended. Operation $add(x)$, which add element $x$ and increments the counter for the object $x$; and an operation $rem(x)$ which decrements the counter of $x$. Because increment and decrement commute, $add$ and $rem$ also commute, and so operations never conflict. 
 \end{itemize}
 
 PSI property specification:
@@ -102,17 +104,3 @@ In case of WaltSocial (Facebook like application) the latency for different oper
 The authors have designed a transactional geo-replicated key-value store with the key feature of Parallel Snapshot Isolation which in case of asynchronous replication, avoids conflicts across sites allowing efficient implementation of application, demonstrated by WaltSocial and ReTwis which achieved reasonable performance.  
 
 \end{document}
-Hide details
-Change log
-r15 by jbotnascimento on Today (8 hours ago)   Diff
-adding container paragraph
-Go to: 	
-Double click a line to add a comment
-Older revisions
- r14 by jbotnascimento on Today (8 hours ago)   Diff 
- r13 by jbotnascimento on Today (9 hours ago)   Diff 
- r12 by jbotnascimento on Yesterday (18 hours ago)   Diff
-All revisions of this file
-File info
-Size: 8729 bytes, 103 lines
-View raw file
