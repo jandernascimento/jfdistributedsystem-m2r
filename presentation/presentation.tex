@@ -1,6 +1,7 @@
 \documentclass{beamer}
 \usepackage[utf8]{inputenc}
 \usepackage[final]{pdfpages}
+
 \usetheme{Goettingen}%Warsaw}
 \usecolortheme{lily}
 \setbeamertemplate{footline}[page number]
@@ -31,7 +32,12 @@
 	
 		\begin{frame}{Objective}
 		
-			Increase distributed system availability while reduce the response time 
+			Build scalable distributed system, improve the availability and reduce response time 
+		
+	\begin{figure} [H]
+		\centering
+		\includegraphics[scale=0.20]{img/fig:network}
+	\end{figure}		
 		
 			How this is achieved?
 			\begin{enumerate}
@@ -46,7 +52,26 @@
 		\end{frame}	
 			
 		\begin{frame}{Already existing frameworks}
+	
+
+
 		
+	
+	\begin{columns}
+	\begin{column}[1]{5cm}
+	\includegraphics[width=0.5\textwidth]{img/fig:google}
+	\end{column}
+	\begin{column}[1]{5cm}
+	\includegraphics[width=0.5\textwidth]{img/fig:yahoo}
+	\end{column}
+	\end{columns}
+		
+		
+		\begin{figure} [H]
+			\centering
+			\includegraphics[scale=0.20]{img/fig:hp}
+		\end{figure}				
+
 			Other transaction infrastructure					
 		
 			\begin{enumerate}
@@ -63,7 +88,7 @@
 
 		\end{frame}
 	
-		\begin{frame}{Issues?}
+		\begin{frame}{Dificulties?}
 		
 			%talk about sinfonia compare with other the type server that dont use transactions
 		\begin{itemize}
@@ -132,15 +157,9 @@
 		\end{itemize}		
 		
 		\end{frame}
-		
-		\begin{frame}{Limitations}
 
-			\begin{enumerate}
-			\item Short and long fork may happen
-			\item Only a single store system per site used for writing
-			\end{enumerate}
-			
-		\end{frame}
+		%%%% JANDER SPEACH ENDS HERE
+		%%%% LIVIU STARTS HERE
 
 		\begin{frame}{PSI and Conflict resolution}
 		
@@ -154,7 +173,19 @@
 		\end{itemize}
 		
 		\end{frame}
+
+		\begin{frame}{Types of transaction}
 		
+		\begin{itemize}
+		
+		\item Fast commit: used for objects which are local to the preferred site, involving two checks (objects are unmodified since the transaction started and unlocked)
+		
+		\item Slow commit: the preferred site of the object if a non-local one. This involves 2-phases: all the objects are unmodified and unlocked on their site, and after this it goes as a fast commit protocol		
+		
+		\end{itemize}
+
+		\end{frame}
+ 	
 		\begin{frame}{Transaction Durability}
 		
 		Two kinds of durability can be used:
@@ -165,18 +196,17 @@
 		\end{itemize}		
 		
 		\end{frame} 	
-		
-		\begin{frame}{Site Recovery}
-		
-		In case of a full site failure, those approaches can be applied:
-		\begin{itemize}
-		\item Conservative
-		\item Agressive
-		\end{itemize}		
-		
-		\end{frame}	 	
-			 	
-	\subsection{Design}
+
+		\begin{frame}{Limitations}
+
+			\begin{enumerate}
+			\item Short and long fork may happen
+			\item Only a single store system per site used for writing
+			\end{enumerate}
+			
+		\end{frame}
+ 	
+	\subsection{Site Replication}
 	 	
  	%talk about 	 	
 	 	
@@ -192,32 +222,22 @@
 		
 		\end{frame}	 	
 		
-
-		\begin{frame}{Types of transaction}
+		\begin{frame}{Site Recovery}
 		
+		In case of a full site failure, those approaches can be applied:
 		\begin{itemize}
+		\item Conservative
+		\item Agressive
+		\end{itemize}		
 		
-		\item Fast commit: used for objects which are local to the preferred site, involving two checks (objects are unmodified since the transaction started and unlocked)
-		
-		\item Slow commit: the preferred site of the object if a non-local one. This involves 2-phases: all the objects are unmodified and unlocked on their site, and after this it goes as a fast commit protocol		
-		
-		\end{itemize}
-
-		\end{frame}
+		\end{frame}	 	
  	
-	 	
+ 	
 \section{Performance}
 
-	\subsection{Results}
-	\begin{itemize}
-	\item Experimental setup consisting of 4 machines around the world running on Amazon EC2 cloud platform as well as a private cluster
-	\item Base performance was evaluated by comparing Walter with a commercial open-source database library, Berkely DB 11gR2 with comparable results
-	\item Aggregate transaction throughput
+	\subsection{Features}
 	
-	\end{itemize}
-	
-	\subsection{Recap}
-	\begin{frame}{Recap...}
+	\begin{frame}{Features}
 	
 		\begin{itemize}
 		\item \textit{Asynchronous replication across sites.} Replication is done lazily in the background to reduce latency
@@ -227,6 +247,7 @@
 		\end{itemize}
 	\end{frame}
 
+	\subsection{Results}	
 
 \section{Conclusion}
 
@@ -245,3 +266,17 @@
 \end{frame}
 
 \end{document}
+Hide details
+Change log
+r23 by jbotnascimento on Today (28 minutes ago)   Diff
+adding few images
+Go to: 	
+Double click a line to add a comment
+Older revisions
+ r22 by jbotnascimento on Today (58 minutes ago)   Diff 
+ r20 by jbotnascimento on Today (4 hours ago)   Diff 
+ r19 by jbotnascimento on Yesterday (16 hours ago)   Diff
+All revisions of this file
+File info
+Size: 7121 bytes, 268 lines
+View raw file
