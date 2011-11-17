@@ -31,7 +31,7 @@
 	
 		\begin{frame}{Objective}
 		
-			Reduce the system response time and increase the system availability
+			Increase the system availability and reduce the system response time 
 		
 			How this is achieved?
 			\begin{enumerate}
@@ -42,12 +42,6 @@
 			\begin{block}{Lema}
 				Respecting causality order without compromise the throughput
 			\end{block}		
-		
-		\end{frame}	
-	
-		\begin{frame}{Challenges}
-		
-		
 		
 		\end{frame}	
 	
@@ -88,9 +82,9 @@
 			\item Ignoring primary site constraint
 			\end{enumerate}
 
-			\begin{block}{Nothing is so easy..}
+			\begin{alertblock}{Nothing is so easy..}
 				Snapshot Isolation protocol had to be changed to support multiple site store
-			\end{block}
+			\end{alertblock}
 						
 		\end{frame}		
 
@@ -101,9 +95,9 @@
 		
 			%talk about cset and preferered sites
 		
-			Snapshot Isolation providing a base protocol for information exchange
+			Snapshot Isolation provide the basics for the current PSI protocol
 			
-			CSet a non structure way of keeping information with low conflict rate		
+			CSet Counts the object operations
 			%talk about what is exactly c set
 		
 		\end{frame}
