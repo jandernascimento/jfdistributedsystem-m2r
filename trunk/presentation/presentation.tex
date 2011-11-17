@@ -90,24 +90,31 @@
 	
 		\begin{frame}{Dificulties?}
 		
+		\begin{figure} [H]
+			\centering
+			\includegraphics[scale=0.20]{img/fig:clock}
+		\end{figure}			
+		
+		What are the problems faced?		
+		
 			%talk about sinfonia compare with other the type server that dont use transactions
 		\begin{itemize}
-		\item Walter: key-value store database, supporting transactions and replication of data across remote sites
-		\item There exists several systems (Sinfonia, Percolator) which offer support for transactions but they target applications on a single site. 
-		\item Whereas the systems which target distributed application don't offer support for conflict-resolution logic
+		\item Replication between sites
+		\item Preserve consistence		
+		\item Conflict resolution
 		\end{itemize}
 		
 		\end{frame}		
 	
 		\begin{frame}{Basis of the solution}
 
-			Evolved from:
+			Delta between Parallel Snapshot Isolation from others?
 			\begin{enumerate}
-			\item Snapshot Isolation
-			\item Ignoring primary site constraint
+			\item Snapshot Isolation. e.g. percolator
+			\item Ignoring primary site constraint. e.g. sinfonia
 			\end{enumerate}
 
-			\begin{alertblock}{Nothing is so easy..}
+			\begin{alertblock}{Nothing as easy as we thought it would be..}
 				Snapshot Isolation protocol had to be changed to support multiple site store
 			\end{alertblock}
 						
