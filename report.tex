@@ -19,7 +19,7 @@
 %Begin Liviu section
 
 \section{Introduction}
-This paper will give a short review of Walter, a key-value store that supports transactions and replicates data across remote sites. Those goals are reached by using preferred sites and counting sets, this protocol is named Parallel Snapshot Isolation (PSI). 
+This paper will give a short review of Walter, a key-value store that supports transactions and replicates data across remote sites. This goals are reached by using preferred sites and counting sets, together with a protocol named Parallel Snapshot Isolation (PSI). 
 
 PSI was coined after Snapshop Isolation(SI), an approach already largely used by by comercial databases (e.g. Oracle). 
 
@@ -39,7 +39,7 @@ The key features of Walter are:
 \end{itemize}
           
 \section{Parallel Snapshot Isolation}
-Snapshot isolation ensures that, \textbf{first} transactions are read from a snapshot that reflects a single commit ordering of transactions, and \textbf{secondly} providing certain level of non-assisted conflict resolution, e.g if two concurrent transactions have a write-write conflict, one must be aborted.
+Snapshot isolation ensures that, \textbf{first}, transactions are read from a snapshot that reflects a single commit ordering of transactions, and, \textbf{secondly}, providing certain level of non-assisted conflict resolution, e.g if two concurrent transactions have a write-write conflict, one must be aborted.
  
 \textit{Parallel snapshot isolation} extends Snapshot Isolation by allowing different sites to have different commit orderings across multiple sites. PSI's relaxation is acceptable for web applications where each user communicates with one site at a time and there is no need for a global ordering of all actions across all users. 
 
@@ -73,14 +73,14 @@ The whole communication between sites are done with Remote Procedure Calls. %we 
 
 For a matter of organization, the objects can be organized in what is called Containers, which a single site may have several. For instance, the administrator can create one Container per user, so he can move the container across other sites to improve locality. Although, it is not possible to move the object from a given container to another one, since the \textit{oid} of each object is composed with the container id, this move would require updating the \textit{oid}'s. 
 
-To provide a site fault tolerance, Walter relies on a \textit{Configuration Service}. Which is responsible for leasing the role of preferred site to containers of the faulty site. In order to perform such operation the Configuration Service keeps a list of sites which are up and running. 
+To provide a site fault tolerance, Walter relies on a \textit{Configuration Service}, which is responsible for leasing the role of preferred site to containers of the faulty site. In order to perform such operation the Configuration Service keeps a list of sites which are up and running. 
 
-For keeping track the sequence of operations, Walter uses vector timestamps to synchronize between sites, since the monolic-time concept is expensive and causes unnecessary dependencies(not causal ordering). Each site has a local version number indicating the number of transactions reflected in the snapshot.
+For keeping track the sequence of operations, Walter uses vector timestamps to synchronize between sites, since the monotonic time concept is expensive and causes unnecessary dependencies(not causal ordering). Each site has a local version number indicating the number of transactions reflected in the snapshot.
 
 There exist two types of transactions: the fast and slow commit. 
 
 The \textit{fast commit} is used for objects which are local to the preferred site and involves two checks: first, checking if the objects are unmodified since the transaction started and second if all the objects are unlocked. 
-In other corner, \textit{slow commit} is used for transactions whose object's preferred site is a non-local one. In this case to update is done in two phases: first, the server asks the objects preferred sites if they are unmodified and unlocked and if all of them are "yes" then it proceeds to commit as a fast commit protocol. %review once more
+In other corner, \textit{slow commit} is used for transactions whose object's preferred site is a non-local one. In this case the update is done in two phases: first, the server asks the objects preferred sites if they are unmodified and unlocked and if all of the sites respond with a "yes" then it proceeds to commit as a fast commit protocol. %review once more
 
 Propagation of committed transactions are done asynchronously to the other sites. When all the transactions are committed at all sites, the transaction is marked as globally thus becomes visible to other sites. 
 
@@ -90,9 +90,10 @@ They first evaluated the base performance of Walter comparing it with Berkely DB
 
 The benchmark consisted in either write or read transactions each accessing one 100 byte object. Experiments were run on Amazon's EC2 cloud platform in four sites across the globe. 
 
-The micro-benchmark for evaluating the throughput of transactions across several sites with read/write operations as well as performing several operations within one transactions showed a linear scalability with the number of sites. Read throughput is bounded by the RPC performance and write throughput is lower compared to the read one because of the lock contention. Having several operations within one transactions increases the throughput compared with every operation being a single transaction. 
+The micro-benchmark for evaluating the throughput of transactions across several sites with read/write operations as well as performing several operations within one transactions showed a linear scalability with the number of sites. Read throughput is bounded by the RPC performance and write throughput is lower compared to the read one because of the lock contention. Having several operations within one transactions increases the throughput compared with every operation being a single transaction. ReTwis (Twitter like application) running with Walter achieved a slowdown of about 25\% compared to the version running with Redis as a database but showed a doubling of throughput when scaled on two sites. 
 
 As far as the latency concerns, when having fast commits this was mainly influenced by the effects of queuing inside the Walter server and of flushing the commit log to disk resulting a 99.9 percentile latency of 27 ms. When it comes to disaster safe transactions the latency is approximately uniform distributed between $[RTT_{MAX},2*RTT_{MAX}]$ where $RTT_{MAX}$ is the maximum round trip latency between the site which issued the transactions and other sites.
+In case of WaltSocial (Facebook like application) the latency for different operations (like read-info, befriend, status update, post message) was below 50ms for the 99.9 percentile.
 
 %end Jander section
 
@@ -101,3 +102,17 @@ As far as the latency concerns, when having fast commits this was mainly influen
 The authors have designed a transactional geo-replicated key-value store with the key feature of Parallel Snapshot Isolation which in case of asynchronous replication, avoids conflicts across sites allowing efficient implementation of application, demonstrated by WaltSocial and ReTwis which achieved reasonable performance.  
 
 \end{document}
+Hide details
+Change log
+r15 by jbotnascimento on Today (8 hours ago)   Diff
+adding container paragraph
+Go to: 	
+Double click a line to add a comment
+Older revisions
+ r14 by jbotnascimento on Today (8 hours ago)   Diff 
+ r13 by jbotnascimento on Today (9 hours ago)   Diff 
+ r12 by jbotnascimento on Yesterday (18 hours ago)   Diff
+All revisions of this file
+File info
+Size: 8729 bytes, 103 lines
+View raw file
