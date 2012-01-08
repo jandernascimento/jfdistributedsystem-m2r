@@ -38,12 +38,14 @@
 		\centering
 		\includegraphics[scale=0.20]{img/fig_network}
 	\end{figure}		
-		
+		\pause
 			How this is achieved?
-			\begin{enumerate}
+			\begin{enumerate}[<+->]
 			\item Key-store application
 			\item Asynchronous replication
 			\end{enumerate}
+			
+		\pause			
 			
 			\begin{block}{Lema}
 				Respecting causality order without compromise the throughput
@@ -75,14 +77,16 @@
 			Other transaction infrastructure					
 		
 			\begin{enumerate}
+			\item Percolator			
 			\item Sinfonia
-			\item Percolator
 			\end{enumerate}						
-					
+				
+			\pause			
+			
 			Other storage system
 			\begin{enumerate}
 			\item PNUTS
-			\item COPS
+			%\item COPS
 			\item Megastore
 			\end{enumerate}		
 
@@ -92,13 +96,13 @@
 		
 		\begin{figure} [H]
 			\centering
-			\includegraphics[scale=0.20]{img/fig_clock}
+			\includegraphics[scale=0.40]{img/fig_clock}
 		\end{figure}			
 		
 		What are the problems faced?		
 		
 			%talk about sinfonia compare with other the type server that dont use transactions
-		\begin{itemize}
+		\begin{itemize}[<+->]
 		\item Replication between sites
 		\item Preserve consistence		
 		\item Conflict resolution
@@ -106,15 +110,17 @@
 		
 		\end{frame}		
 	
-		\begin{frame}{Basis of the solution}
+		\begin{frame}{Parallel Snapshot idiosyncrasy}
 
-			Delta between Parallel Snapshot Isolation from others?
+			What is the difference between Parallel Snapshot Isolation and others?
 			\begin{enumerate}
-			\item Snapshot Isolation. e.g. percolator
-			\item Ignoring primary site constraint. e.g. sinfonia
+			\item Snapshot Isolation. %e.g. percolator
+			\item Ignoring primary site constraint. %e.g. sinfonia
 			\end{enumerate}
 
-			\begin{alertblock}{Nothing as easy as we thought it would be..}
+			\pause
+
+			\begin{alertblock}{Is just gather things together?}
 				Snapshot Isolation protocol had to be changed to support multiple site store
 			\end{alertblock}
 						
@@ -125,42 +131,40 @@
 	\subsection{Parallel Snapshot Isolation}
 		\begin{frame}{Tools}
 		
-			Two main tools are used to reach the goal:
+			Few tools are used to reach the goal
 		
-			\emph{Snapshot Isolation}, bases for the PSI
-			
-			\emph{CSet}, Counting Set
-			
+			\begin{itemize}[<+->]		
 		
+			\item\emph{CSet} (Counting Set)
+			
+			\item\emph{Preferred Site}
+			
+			\item\emph{Object Container}
+			
+			\end{itemize}			
+			
 		\end{frame}
 		
 		\begin{frame}{Properties}
 		
-		The following properties must be maintained:		
-		\begin{itemize}
-		\item (Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began
-		\item (No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint
-		\item (Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site
-		\end{itemize}		
+		PSI as its properties:		
 		
 		\begin{itemize}
-		\item (Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began
-		\item (No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint
-		\item (Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site
+		\item Operations on the last snapshot
+		\item Transactions must to be disjoint
+		\item Transaction must respect the causality across site 
 		\end{itemize}
 		
 		\end{frame}	
 
-		\begin{frame}{Anomalies}
-		
-		Some anomalies that might affect some store systems are:
-		\begin{itemize}
+
+		\begin{frame}{Anomalies}		
+		Storage systems side-effects
+		\begin{itemize}[<+->]
 		\item Dirty read
 		\item Non-repeatable read
 		\item Lost update
-		\item Short fork
-		\item Long fork
-		\item Conflict fork
+		\item Fork
 		\end{itemize}		
 		
 		\end{frame}
@@ -168,48 +172,51 @@
 		%%%% JANDER SPEACH ENDS HERE
 		%%%% LIVIU STARTS HERE
 
-\begin{frame}{Limitations}
+	\begin{frame}{Limitations}
 
 			\begin{enumerate}
 			\item Short and long fork may happen
-			\item Only a single store system per site used for writing
+			\item Only a single store system per site used
+			\item The Container of an object cannot be changed
 			\end{enumerate}
 			
+	\begin{columns}
+	\begin{column}[1]{5cm}
+	\begin{figure}
+	\includegraphics[width=1.0\textwidth]{img/fig_conflict01.png}
+	\caption{Short fork}
+	\end{figure}
+	\end{column}
+	\begin{column}[1]{5cm}
+	\begin{figure}	
+	\includegraphics[width=1.0\textwidth]{img/fig_conflict02.png}
+	\caption{Long fork}
+	\end{figure}
+	\end{column}
+	\end{columns}			
+			
 		\end{frame}
-
-		\begin{frame}{PSI and Conflict resolution}
 		
-		In order to improve conflict resolution, following approaches are used:
-		
-		\begin{itemize}
-		
-		\item Preferred sites: Each object is assigned a preferred site where writes to it can be committed without checking other sites for conflicts
-		\item Conflict-free counting set objects: csets only allow incrementation or decremental of elements, operation which are commutative  
-		
-		\end{itemize}
-		
-		\end{frame}
-		
-		\begin{frame}{Transaction Durability}
+		\begin{frame}{Durability and Availability}
 		
 		Two kinds of durability can be used:
-
+		
 		\begin{itemize}
 		\item Normal
-		\item Disaster-safe durability
+		\item Disaster-safe
 		\end{itemize}		
+		
+		\pause			
+		
+		In case of a full site failure which did not propagate all the transactions, the following approaches can be used:
+		
+		\begin{itemize}
+		\item Conservative
+		\item Aggressive
+		\end{itemize}			
 		
 		\end{frame} 	
 		
-		\begin{frame}{Site Recovery}
-		
-		In case of a full site failure, those approaches can be applied:
-		\begin{itemize}
-		\item Conservative
-		\item Agressive
-		\end{itemize}		
-		
-		\end{frame}	 	
 			 	
 	\subsection{Design}
 	 	
@@ -221,7 +228,7 @@
 		
 		\item Synchronizing among sites uses vector timestamps
 		\item Each site has a local version number indicating the number of transactions in the snapshot
-		\item This allows a casual ordering of the events
+		\item Across sites there is casual ordering of the events
 		
 		\end{itemize}
 		
@@ -230,11 +237,11 @@
 
 		\begin{frame}{Types of transaction}
 		
-		\begin{itemize}
+		\begin{itemize}[<+->]
 		
 		\item Fast commit: used for objects which are local to the preferred site, involving two checks (objects are unmodified since the transaction started and unlocked)
 		
-		\item Slow commit: the preferred site of the object if a non-local one. This involves 2-phases: all the objects are unmodified and unlocked on their site, and after this it goes as a fast commit protocol		
+		\item Slow commit: the preferred site of the object if a non-local one. This involves 2-phases: all the objects are unmodified and unlocked on their site, and after that proceeds as a fast commit
 		
 		\end{itemize}
 
@@ -244,21 +251,57 @@
 \section{Performance}
 
 	\subsection{Results}
-	\begin{itemize}
-	\item Experimental setup consisting of 4 machines around the world running on Amazon EC2 cloud platform as well as a private cluster
-	\item Base performance was evaluated by comparing Walter with a commercial open-source database library, Berkely DB 11gR2 with comparable results
-	\item Read throughput is bounded by the RPC performance and scales linearly with the number of sites
+
+	\begin{frame}{Evaluation}
 	
+	Experimental setup
+	
+	\begin{itemize}
+	\item Consisted of maximum 4 machines around the world running on Amazon EC2 cloud platform as well as a private cluster
+	\item Read/Write operations are performed on 100-bytes objects
+	\end{itemize}	
+	\pause
+	Results
+	\begin{itemize}
+	\item Base performance was evaluated by comparing Walter with a commercial open-source database library, Berkely DB 11gR2 with comparable results
+	\end{itemize}	
+	
+	\end{frame}	
+	
+	\begin{frame}{Evaluation}	
+	
+	\begin{figure}[H]
+	\includegraphics[scale=0.6]{img/fig_evaluation01.png}
+	\caption{90\% read-tx: 10\% write-tx workload}
+	\end{figure}	
+	
+	\begin{itemize}	
+	\item Read throughput is bounded by the RPC performance and scales linearly with the number of sites	
+	\item Write throughput is lower than read throughput due to lock contention. 	
 	\end{itemize}
 	
-	\subsection{Recap}
-	\begin{frame}{Recap...}
+	\end{frame}
+	
+	\begin{frame}{Evaluation}	
+	
+	\begin{figure}[H]
+	\includegraphics[scale=0.45]{img/fig_evaluation03.png}
+	\caption{Latency of slow commit and replication}
+	\end{figure}	
+	
+	\end{frame}	
+	
+	\subsection*{Recap}
+	
+	\begin{frame}{Reminder}
+	
+		What Walter offers?	
 	
 		\begin{itemize}
-		\item \textit{Asynchronous replication across sites.} Replication is done lazily in the background to reduce latency
-		\item \textit{Efficient update-anywhere for certain objects.} Counting sets can be updated efficiently anywhere, while other objects can be updated efficiently at their preferred site
-		\item \textit{Freedom from conflict-resolution logic}. which is complex to developers
-		\item \textit{Strong isolation within each site.} Provided by PSI.
+		\item \textit{Asynchronous replication across sites}. Replication is done lazily in the background to reduce latency
+		\item \textit{Efficient update}. Counting sets can be updated efficiently anywhere, while other objects can be updated efficiently at their preferred site
+		\item \textit{Freedom from conflict-resolution logic}. Which is complex to developers
+		\item \textit{Strong isolation within each site}. Provided by PSI.
 		\end{itemize}
 	\end{frame}
 
@@ -267,7 +310,10 @@
 
 \begin{frame}{Conclusion}
 
-	and our conclusion is...
+		\begin{itemize}%[<+->]
+		\item Walter was used to efficiently implement PSI
+		\item The use of such system was demonstrated by WaltSocial and ReTwis
+		\end{itemize}
 
 \end{frame}
 
