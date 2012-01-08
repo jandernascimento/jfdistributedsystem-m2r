@@ -9,9 +9,9 @@
 
 \begin{document}
 
-\title{Transactional storage for geo-replicated systems \\ overview}
+\title{Transactional storage for geo-replicated systems, overview}
 
-\author{Jander Nascimento,
+\author{Jander Nascimento
 \and Liviu Varga}
 
 \maketitle
@@ -19,9 +19,7 @@
 %Begin Liviu section
 
 \section{Introduction}
-This paper will give a short review of Walter, a key-value store that allows asynchronous replication. It supports transactions and replicates data across remote sites. This goals are reached by using preferred sites and counting sets, together with a protocol named Parallel Snapshot Isolation (PSI). 
-
-PSI was coined after Snapshot Isolation(SI), an approach already largely used by commercial databases (e.g. Oracle). 
+This paper will give a short review of Walter, a key-value store that allows asynchronous replication. It supports transactions and replicates data across remote sites. This goals are reached by using preferred sites and counting sets, together with a protocol named Parallel Snapshot Isolation (PSI). It was coined after Snapshot Isolation(SI), an approach already largely used by commercial databases (e.g. Oracle). 
 
 SI provides a strong guarantee within a site; Which leaves the lack for the multiple sites store. Thus, PSI provides casual ordering and precludes write-write conflicts across sites.
 
@@ -51,31 +49,33 @@ To avoid write-write conflicts across sites and for implementation of PSI, Walte
 \item \textit{Conflict-free counting set objects.} A \textit{cset} is similar to a \textit{multiset}, in the sense that it keeps a count for each element, but unlike \textit{multisets}, the count could be negative for \textit{cset}. A \textit{cset} supports few operations, which can be extended. Operation $add(x)$, which add element $x$ and increments the counter for the object $x$; and an operation $rem(x)$ which decrements the counter of $x$. Because increment and decrement commute, $add$ and $rem$ also commute, and so operations never conflict. 
 \end{itemize}
 
-PSI property specification:
+PSI properties:
 
-PSI \textsc{property} 1. \textit{(Site Snapshot Read) All operations read the most recent committed version at the transaction's site as of the time when the transaction began.}
+\textsc{Property} 1. \textit{(Site Snapshot Read) All operations read the most recent committed version at the current site.}
 
-PSI \textsc{property} 2. \textit{(No Write-Write Conflicts) The write sets of each pair of committed somewhere-concurrent transactions must be disjoint.}
+\textsc{Property} 2. \textit{(No Write-Write Conflicts) Transaction must be disjoint}
 
-PSI \textsc{property} 3. \textit{(Commit Causality Across Sites) If a transaction $T_{1}$ commits at a site A before a transaction $T_{2}$ starts at site A, then $T_{1}$ cannot commit after $T_{2}$ at any site.}
+\textsc{Property} 3. \textit{(Commit Causality Order Across Sites) The transaction must have the same order in every site. e.g. If in site \emph{A} $T_1<T_2$ then in site \emph{B} the order $T_2>T_1$ still holds.}
 
 %may be add some other info
-It is said that the transactions are \textit{somewhere-concurrent} if they are concurrent at $site(T_{1})$ or at $site(T_{2})$.
+It is said that the transactions are \textit{somewhere-concurrent} if they are concurrent between sites, by having overlapping transactions.
 
-The anomalies which might appear because of the isolation properties of PSI are \textbf{short fork} and \textbf{long fork}, which are the price paid for replicate the store update buffer asynchronously. Others anomalies such as dirty read, non-repeatable read, lost update or conflicting fork does not happen in this protocol. 
+The \textbf{short fork} and \textbf{long fork} anomalies may appear because of the asynchronism nature of PSI replication, which are the price paid to replicate the storage log asynchronously. Others anomalies such as dirty read, non-repeatable read, lost update or conflicting fork does not happen in PSI. 
 %end Liviu section
 
 %start Jander section
 
 \section{Design and Algorithm}
 
-Each site has a Walter server and several clients. For a given object is responsibility of one, and only one, Walter server to update (perform write) that object, although others clients, located in other sites, can read it.
+Each site has a Walter server and several clients. For a given object is assigned a single Preferred Site. It is responsible for update (perform write) that object. Although others clients can read from it.
 
-The whole communication between sites are done with Remote Procedure Calls. %we should adding something else in here.. but what!? not sure yet.
+For a matter of organization, the objects are kept in what is called \emph{Containers}, one site may contain several containers. For instance, the administrator can create one Container per user, so he can move the container across other sites to improve locality. 
 
-For a matter of organization, the objects can be organized in what is called Containers, which a single site may have several. For instance, the administrator can create one Container per user, so he can move the container across other sites to improve locality. Although, it is not possible to move the object from a given container to another one, since the \textit{oid} of each object is composed with the container id, this move would require updating the \textit{oid}'s. 
+Although, it is not possible to move the object from a given container to another, since the \textit{oid} (Object ID) contains the container id as well. Thus, perform such operation would require updating the \textit{oid}'s. 
 
-To provide a site fault tolerance, Walter relies on a \textit{Configuration Service}, which is responsible for leasing the role of preferred site to containers of the faulty site. In order to perform such operation the Configuration Service keeps a list of sites which are up and running. 
+To provide a site fault tolerance, Walter relies on a \textit{Configuration Service}, which is responsible for leasing the role of Preferred Site to the containers. 
+
+In order to perform such operation the \emph{Configuration Service}(CS) keeps a list of sites which are up and running. Example, CS detects a failure in the site \emph{A}, CS first updates the available sites list by removing site \emph{A} and assign another site to play the role of Preferred site for the site \emph{A}. 
 
 For keeping track the sequence of operations, Walter uses vector timestamps to synchronize between sites, since the monotonic time concept is expensive and causes unnecessary dependencies(not causal ordering). Each site has a local version number indicating the number of transactions reflected in the snapshot.
 
@@ -101,6 +101,6 @@ In case of WaltSocial (Facebook like application) the latency for different oper
 
 \section{Conclusion}
 
-The authors have designed a transactional geo-replicated key-value store with the key feature of Parallel Snapshot Isolation which in case of asynchronous replication, avoids conflicts across sites allowing efficient implementation of application, demonstrated by WaltSocial and ReTwis which achieved reasonable performance.  
+The transactional geo-replicated key-value store with Parallel Snapshot Isolation support is able to replicated the change among other sites without compromising the speed and reducing the number of possible conflicts. The performance was verified using implementation of two very common services and the results presented a good scalability, although the number of tested server is still small (only 4 sites).  
 
 \end{document}
